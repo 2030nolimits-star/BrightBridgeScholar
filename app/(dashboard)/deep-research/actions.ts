@@ -1,14 +1,11 @@
 "use server"
 
 import { geminiModel } from "@/lib/gemini"
-import { auth0 } from "@/lib/auth0"
 import { supabase } from "@/lib/supabase"
 
 export async function performDeepResearch(query: string) {
-    const session = await auth0.getSession()
-    if (!session) {
-        throw new Error("Unauthorized")
-    }
+    // Auth0 session check removed
+    const user = { sub: "mock-user-id" }
 
     try {
         const prompt = `
@@ -31,7 +28,7 @@ export async function performDeepResearch(query: string) {
         // Save to Supabase (Optional: will fail gracefully if table not found)
         try {
             await supabase.from('research_history').insert({
-                user_id: session.user.sub,
+                user_id: user.sub,
                 type: 'deep-research',
                 query: query,
                 result: text,
@@ -44,6 +41,6 @@ export async function performDeepResearch(query: string) {
         return text
     } catch (error) {
         console.error("Deep Research Error:", error)
-        throw new Error("Failed to perform research. Please check your Gemini API key.")
+        throw new Error("API Error: " + (error instanceof Error ? error.message : String(error)))
     }
 }
